@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Music Explorer</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      background: #111;
+      color: #f5f5f5;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 70px 24px;
+    }
+    main { max-width: 800px; margin: auto; }
+    .tag { color: #aaa; letter-spacing: 3px; }
+    h1 { font-size: clamp(42px, 8vw, 80px); margin: 12px 0; }
+    p { color: #aaa; line-height: 1.6; }
+    .search { display: flex; gap: 10px; margin: 35px 0; }
+    input {
+      flex: 1; min-width: 0; padding: 16px;
+      background: #222; border: 1px solid #444;
+      color: white; border-radius: 8px;
+    }
+    button {
+      background: #e4ff76; color: #111;
+      border: 0; padding: 16px 22px;
+      border-radius: 8px; cursor: pointer;
+      font-weight: bold;
+    }
+    .card {
+      background: #1d1d1d; padding: 22px;
+      border: 1px solid #333; border-radius: 12px;
+      margin-bottom: 12px;
+    }
+    .card h2 { margin: 0 0 8px; }
+    .card p { margin: 5px 0; }
+    #status { margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="tag">EXPLORE / 001</div>
+    <h1>MUSIC<br>EXPLORER.</h1>
+    <p>Discover artists from around the world.</p>
+
+    <form class="search" id="searchForm">
+      <input id="artist" placeholder="Search an artist..."
+        value="Frank Ocean" required>
+      <button type="submit">SEARCH</button>
+    </form>
+
+    <p id="status" role="status"></p>
+    <div id="results"></div>
+  </main>
+
+  <script>
+    const form = document.getElementById("searchForm");
+    const input = document.getElementById("artist");
+    const results = document.getElementById("results");
+    const status = document.getElementById("status");
+
+    async function searchArtists(name) {
+      results.replaceChildren();
+      status.textContent = "Searching...";
+
+      try {
+        const url = "https://musicbrainz.org/ws/2/artist/?query="
+          + encodeURIComponent('artist:"' + name + '"')
+          + "&fmt=json&limit=8";
+
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("API request failed");
+
+        const data = await response.json();
+        status.textContent = data.artists.length
+          ? "SEARCH RESULTS"
+          : "No artists found.";
+
+        data.artists.forEach(artist => {
+          const card = document.createElement("div");
+          card.className = "card";
+
+          const title = document.createElement("h2");
+          title.textContent = artist.name;
+
+          const country = document.createElement("p");
+          country.textContent = "Country: "
+            + (artist.country || "Unknown");
+
+          const type = document.createElement("p");
+          type.textContent = "Type: "
+            + (artist.type || "Not specified");
+
+          card.append(title, country, type);
+          results.appendChild(card);
+        });
+      } catch (error) {
+        status.textContent =
+          "Could not load artists. Please try again.";
+      }
+    }
+
+    form.addEventListener("submit", event => {
+      event.preventDefault();
+      searchArtists(input.value.trim());
+    });
+
+    searchArtists(input.value);
+  </script>
+</body>
+</html>
